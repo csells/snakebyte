@@ -1,16 +1,7 @@
 # snakebyte
 
-A new Flutter project.
+Following along with [this most excellent tutorial to build Snake](https://blog.devgenius.io/lets-create-a-snake-game-using-flutter-and-flame-38482d3cf0ff) using [the Flame game engine for Flutter](https://flame-engine.org/).
 
-## Getting Started
+Updating it as I go to implement [my old favorite Apple \]\[+ game Snake Byte](https://en.wikipedia.org/wiki/Snake_Byte), shown [here](https://www.youtube.com/watch?v=sZ1fBpcLCYE) on YouTube.
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+All of this is nominally in service of learning [the ECS pattern](https://en.wikipedia.org/wiki/Entity_component_system) in an environment that I'm already familiar with ([Flutter](https://flutter.dev)).

@@ -1,12 +1,3 @@
-// Flame Snake:
-//  https://blog.devgenius.io/lets-create-a-snake-game-using-flutter-and-flame-38482d3cf0ff
-//
-// Apple ][ Snake Byte:
-//  https://www.youtube.com/watch?v=sZ1fBpcLCYE
-//  https://en.wikipedia.org/wiki/Snake_Byte
-//
-// Flame:
-//  https://flame-engine.org/
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'snake_game.dart';
