@@ -146,6 +146,19 @@ class GameArea extends Component {
   final background = Background();
   final grid = Grid(GameConfig.rows, GameConfig.cols);
   final snake = Snake();
+
+  @override
+  Future<void>? onLoad() async {
+    await super.onLoad();
+
+    await add(background);
+
+    for (final rows in grid.cells) {
+      for (final cell in rows) {
+        await add(cell);
+      }
+    }
+  }
 }
 
 class SnakeGame extends FlameGame {
@@ -160,15 +173,7 @@ class SnakeGame extends FlameGame {
     assert(canvasSize.x == GameConfig.gridWidth);
     assert(canvasSize.y == GameConfig.gridHeight);
 
-    // add the background, the game area and the cells as components to the game
-    await add(area.background);
     await add(area);
-
-    for (final rows in area.grid.cells) {
-      for (final cell in rows) {
-        await add(cell);
-      }
-    }
   }
 }
 
