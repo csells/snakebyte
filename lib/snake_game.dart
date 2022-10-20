@@ -4,13 +4,22 @@ import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/game.dart';
 import 'package:flame/palette.dart';
-import 'package:flutter/material.dart' show Colors, Paint, PaintingStyle;
+import 'package:flutter/material.dart'
+    show Colors, Paint, PaintingStyle, immutable;
 
+@immutable
 class CellPos {
   const CellPos(this.row, this.col);
 
   final int row;
   final int col;
+
+  @override
+  bool operator ==(Object other) =>
+      other is CellPos && other.row == row && other.col == col;
+
+  @override
+  int get hashCode => row.hashCode + col.hashCode;
 }
 
 class GameConfig {
@@ -25,7 +34,7 @@ class GameConfig {
     rows - 1,
     20, // == cols/2
   );
-  // static const fps = 5.0;
+  static const fps = 5.0;
   static const foodRadius = 5.0;
   static const snakeLineThickness = 1.0;
 }
@@ -151,8 +160,11 @@ class FoodRenderer extends CellRenderer {
   }
 }
 
+enum Direction { N, S, E, W }
+
 class Snake {
   final _snakeBody = List<Cell>.empty(growable: true);
+  Direction direction = Direction.N;
 
   // snake grows
   void addLast(Cell cell) {
@@ -161,10 +173,43 @@ class Snake {
   }
 
   // snake moves
-  void removeLast() {
+  void move(Grid grid) {
+    final headPos = _snakeBody.first.pos;
+    late final CellPos newPos;
+    switch (direction) {
+      case Direction.N:
+        newPos = CellPos(headPos.row - 1, headPos.col);
+        break;
+      case Direction.S:
+        newPos = CellPos(headPos.row + 1, headPos.col);
+        break;
+      case Direction.E:
+        newPos = CellPos(headPos.row, headPos.col + 1);
+        break;
+      case Direction.W:
+        newPos = CellPos(headPos.row, headPos.col - 1);
+        break;
+    }
+
+    final newCell = grid.findCell(newPos);
+    if (newCell.loc == Grid.border.loc) return;
+
+    _addFirst(newCell);
+    _removeLast();
+  }
+
+  void _addFirst(Cell cell) {
+    cell.cellType = CellType.snakeBody;
+    _snakeBody.insert(0, cell);
+  }
+
+  void _removeLast() {
     _snakeBody.last.cellType = CellType.empty;
     _snakeBody.remove(_snakeBody.last);
   }
+
+  Vector2 displacementToHead(Vector2 touchPoint) => Vector2(0, 0); // TODO
+  bool isHorizontal() => false; // TODO
 }
 
 class GameArea extends Component {
@@ -196,6 +241,51 @@ class GameArea extends Component {
       for (final cell in rows) {
         await add(cell);
       }
+    }
+  }
+}
+
+abstract class DynamicFpsPositionComponent extends PositionComponent {
+  DynamicFpsPositionComponent() : _targetDt = 1 / GameConfig.fps;
+
+  final double _targetDt;
+  var _dtTotal = 0.0;
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+
+    _dtTotal += dt;
+    if (_dtTotal >= _targetDt) {
+      _dtTotal = 0;
+      updateDynamic(dt);
+    }
+  }
+
+  void updateDynamic(double dt);
+}
+
+class CommandQueue {
+  final touches = List<Vector2>.empty(growable: true);
+
+  void add(Vector2 touchPoint) {
+    if (touches.length != 3) touches.add(touchPoint);
+  }
+
+  void evaluateNextInput(Snake snake) {
+    if (touches.isNotEmpty) {
+      final touchPoint = touches[0];
+      touches.remove(touchPoint);
+
+      final delta = snake.displacementToHead(touchPoint);
+
+      snake.direction = snake.isHorizontal()
+          ? delta.y < 0
+              ? Direction.N
+              : Direction.S
+          : delta.x < 0
+              ? Direction.W
+              : Direction.E;
     }
   }
 }
