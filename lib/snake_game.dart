@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/game.dart';
@@ -24,7 +26,7 @@ class GameConfig {
     20, // == cols/2
   );
   // static const fps = 5.0;
-  // static const foodRadius = 5.0;
+  static const foodRadius = 5.0;
   static const snakeLineThickness = 1.0;
 }
 
@@ -65,18 +67,28 @@ class Grid {
       (pos.col < 0 || pos.col >= cols || pos.row < 0 || pos.row >= rows)
           ? border
           : _cells[pos.row][pos.col];
+
+  void generateFood() {
+    final emptyCells = _cells
+        .expand((element) => element)
+        .where((element) => element.cellType == CellType.empty)
+        .toList();
+    emptyCells[Random().nextInt(emptyCells.length)].cellType = CellType.food;
+  }
 }
 
-enum CellType { empty, snakeBody }
+enum CellType { empty, snakeBody, food }
 
 class Cell extends PositionComponent with HasGameRef<SnakeGame> {
   Cell(this.pos, {this.cellType = CellType.empty})
       : assert(_renderers[CellType.empty.index] is EmptyCellRenderer),
-        assert(_renderers[CellType.snakeBody.index] is SnakeBodyRenderer);
+        assert(_renderers[CellType.snakeBody.index] is SnakeBodyRenderer),
+        assert(_renderers[CellType.food.index] is FoodRenderer);
 
   static final _renderers = <CellRenderer>[
     EmptyCellRenderer(),
     SnakeBodyRenderer(),
+    FoodRenderer(),
   ];
 
   final CellPos pos; // position in columns and rows
@@ -124,6 +136,21 @@ class SnakeBodyRenderer extends CellRenderer {
       );
 }
 
+class FoodRenderer extends CellRenderer {
+  @override
+  void render(Canvas canvas, Vector2 loc) {
+    canvas.drawOval(
+      Rect.fromLTWH(
+        loc.x,
+        loc.y,
+        GameConfig.cellWidth.toDouble(),
+        GameConfig.cellHeight.toDouble(),
+      ),
+      Styles.red,
+    );
+  }
+}
+
 class Snake {
   final _snakeBody = List<Cell>.empty(growable: true);
 
@@ -150,6 +177,9 @@ class GameArea extends Component {
       final cell = grid.findCell(CellPos(headIndex.row - i, headIndex.col));
       snake.addLast(cell);
     }
+
+    // put out some food
+    grid.generateFood();
   }
 
   final background = Background();
