@@ -80,10 +80,9 @@ class Cell extends PositionComponent with HasGameRef<SnakeGame> {
   Future<void> onLoad() async {
     await super.onLoad();
 
-    final start = gameRef.offSets.start;
     loc = Vector2(
-      pos.col * GameConfig.cellWidth + start.x,
-      pos.row * GameConfig.cellHeight + start.y,
+      (pos.col * GameConfig.cellWidth).toDouble(),
+      (pos.row * GameConfig.cellHeight).toDouble(),
     );
   }
 
@@ -132,15 +131,9 @@ class Snake {
   }
 }
 
-class World extends Component {
-  World(this.grid) {
-    _initializeSnake();
-  }
-
-  final Grid grid;
-  final Snake snake = Snake();
-
-  void _initializeSnake() {
+class GameArea extends Component {
+  GameArea() {
+    // initialize snake
     const headIndex = GameConfig.headIndex;
     const snakeLength = GameConfig.initialSnakeLength;
 
@@ -149,23 +142,29 @@ class World extends Component {
       snake.addLast(cell);
     }
   }
+
+  final background = Background();
+  final grid = Grid(GameConfig.rows, GameConfig.cols);
+  final snake = Snake();
 }
 
 class SnakeGame extends FlameGame {
-  final world = World(Grid(GameConfig.rows, GameConfig.cols));
-  late final Offsets offSets;
+  final area = GameArea();
 
   @override
   Future<void> onLoad() async {
     await super.onLoad();
 
-    offSets = Offsets(canvasSize);
+    // assuming that Flutter is doing the centering and scaling,
+    // the grid and the canvas should be the same size
+    assert(canvasSize.x == GameConfig.gridWidth);
+    assert(canvasSize.y == GameConfig.gridHeight);
 
-    await add(Background());
-    await add(world);
+    // add the background, the game area and the cells as components to the game
+    await add(area.background);
+    await add(area);
 
-    final grid = world.grid;
-    for (final rows in grid.cells) {
+    for (final rows in area.grid.cells) {
       for (final cell in rows) {
         await add(cell);
       }
@@ -173,61 +172,34 @@ class SnakeGame extends FlameGame {
   }
 }
 
-class Offsets {
-  Offsets(Vector2 canvasSize) {
-    start = Vector2(
-      (canvasSize.x - GameConfig.gridWidth) / 2,
-      (canvasSize.y - GameConfig.gridHeight) / 2,
-    );
-
-    end = Vector2(
-      canvasSize.x - start.x,
-      canvasSize.y - start.y,
-    );
-  }
-  // grid’s starting and ending coordinates on the game's canvas in pixels
-  late final Vector2 start;
-  late final Vector2 end;
-}
-
 class Background extends PositionComponent with HasGameRef<SnakeGame> {
-  late final Offset start;
-  late final Offset end;
-
-  @override
-  Future<void> onLoad() async {
-    await super.onLoad();
-
-    start = gameRef.offSets.start.toOffset();
-    end = gameRef.offSets.end.toOffset();
-  }
-
   @override
   void render(Canvas canvas) {
+    final size = gameRef.canvasSize;
     canvas.drawRect(
-      Rect.fromPoints(start, end),
+      size.toRect(),
       Paint()..color = Colors.white,
     );
 
-    _drawVerticalLines(canvas);
-    _drawHorizontalLines(canvas);
+    _drawVerticalLines(canvas, size);
+    _drawHorizontalLines(canvas, size);
   }
 
-  void _drawVerticalLines(Canvas c) {
-    for (var x = start.dx; x <= end.dx; x += GameConfig.cellWidth) {
-      c.drawLine(
-        Offset(x, start.dy),
-        Offset(x, end.dy),
+  void _drawVerticalLines(Canvas canvas, Vector2 size) {
+    for (var x = 0.0; x <= size.x; x += GameConfig.cellWidth) {
+      canvas.drawLine(
+        Offset(x, 0),
+        Offset(x, size.y),
         Paint()..color = Colors.blue,
       );
     }
   }
 
-  void _drawHorizontalLines(Canvas c) {
-    for (var y = start.dy; y <= end.dy; y += GameConfig.cellHeight) {
-      c.drawLine(
-        Offset(start.dx, y),
-        Offset(end.dx, y),
+  void _drawHorizontalLines(Canvas canvas, Vector2 size) {
+    for (var y = 0.0; y <= size.y; y += GameConfig.cellHeight) {
+      canvas.drawLine(
+        Offset(0, y),
+        Offset(size.x, y),
         Paint()..color = Colors.blue,
       );
     }
