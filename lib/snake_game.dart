@@ -70,7 +70,14 @@ class Grid {
 enum CellType { empty, snakeBody }
 
 class Cell extends PositionComponent with HasGameRef<SnakeGame> {
-  Cell(this.pos, {this.cellType = CellType.empty});
+  Cell(this.pos, {this.cellType = CellType.empty})
+      : assert(_renderers[CellType.empty.index] is EmptyCellRenderer),
+        assert(_renderers[CellType.snakeBody.index] is SnakeBodyRenderer);
+
+  static final _renderers = <CellRenderer>[
+    EmptyCellRenderer(),
+    SnakeBodyRenderer(),
+  ];
 
   final CellPos pos; // position in columns and rows
   late final Vector2 loc; // top-left of cell in pixels
@@ -87,19 +94,21 @@ class Cell extends PositionComponent with HasGameRef<SnakeGame> {
   }
 
   @override
-  void render(Canvas canvas) {
-    switch (cellType) {
-      case CellType.snakeBody:
-        SnakeBody.render(canvas, loc);
-        break;
-      case CellType.empty:
-        break;
-    }
-  }
+  void render(Canvas canvas) => _renderers[cellType.index].render(canvas, loc);
 }
 
-class SnakeBody {
-  static void render(Canvas canvas, Vector2 loc) => canvas.drawRect(
+abstract class CellRenderer {
+  void render(Canvas canvas, Vector2 loc);
+}
+
+class EmptyCellRenderer extends CellRenderer {
+  @override
+  void render(Canvas canvas, Vector2 loc) {}
+}
+
+class SnakeBodyRenderer extends CellRenderer {
+  @override
+  void render(Canvas canvas, Vector2 loc) => canvas.drawRect(
         Rect.fromPoints(getStart(loc), getEnd(loc)),
         Styles.snakeBody,
       );
@@ -169,7 +178,7 @@ class SnakeGame extends FlameGame {
     await super.onLoad();
 
     // assuming that Flutter is doing the centering and scaling,
-    // the grid and the canvas should be the same size
+    // then the grid and the canvas should be the same size
     assert(canvasSize.x == GameConfig.gridWidth);
     assert(canvasSize.y == GameConfig.gridHeight);
 
