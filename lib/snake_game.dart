@@ -100,16 +100,16 @@ class Cell extends PositionComponent with HasGameRef<SnakeGame> {
 
 class SnakeBody {
   static void render(Canvas canvas, Vector2 loc) => canvas.drawRect(
-        Rect.fromPoints(findStart(loc), findEnd(loc)),
+        Rect.fromPoints(getStart(loc), getEnd(loc)),
         Styles.snakeBody,
       );
 
-  static Offset findStart(Vector2 loc) => Offset(
+  static Offset getStart(Vector2 loc) => Offset(
         loc.x + GameConfig.snakeLineThickness / 2,
         loc.y + GameConfig.snakeLineThickness / 2,
       );
 
-  static Offset findEnd(Vector2 loc) => Offset(
+  static Offset getEnd(Vector2 loc) => Offset(
         loc.x + GameConfig.cellWidth - GameConfig.snakeLineThickness / 2,
         loc.y + GameConfig.cellHeight - GameConfig.snakeLineThickness / 2,
       );
